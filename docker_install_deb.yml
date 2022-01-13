@@ -1,0 +1,50 @@
+---
+- hosts: "{{ inventory_hostname }}"
+  vars:
+    dockeruser: %USERNAME%
+  tasks:
+    - name: apt update
+      apt: 
+       update_cache: true
+    - name: install packages
+      apt: 
+         name:
+         - mc
+         - ca-certificates
+         - curl
+         - gnupg
+         - lsb-release
+         state: present
+    - name: Add key
+      ansible.builtin.apt_key:
+         url: https://download.docker.com/linux/debian/gpg
+         keyring: /usr/share/keyrings/docker-archive-keyring.gpg
+    - name: get architecture
+      ansible.builtin.command: dpkg --print-architecture
+      register: arc 
+    - name: get release
+      ansible.builtin.command: lsb_release -cs
+      register: release 
+    - name: Add Repo
+      copy:
+         content: "deb [arch={{arc.stdout}} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian {{release.stdout}} stable"
+         dest: /etc/apt/sources.list.d/docker.list
+    - name: apt update
+      apt: 
+         update_cache: true
+    - name: install docker
+      apt: 
+         name:
+         - docker-ce 
+         - docker-ce-cli
+         - containerd.io
+         state: present
+    - name: Add Group
+      ansible.builtin.group:
+         name: docker
+         state: present
+    - name: Add user
+      ansible.builtin.user:
+         name: "{{dockeruser}}"
+         groups: docker
+         append: yes
