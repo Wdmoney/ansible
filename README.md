@@ -1,5 +1,5 @@
 # ansible
-Ansible scripts
+Ansible playbooks
 
 ## docker_install_deb.yml
 
